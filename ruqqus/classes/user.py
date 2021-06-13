@@ -3,6 +3,7 @@ from flask import *
 import time
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, deferred, joinedload, lazyload, contains_eager, aliased
+import os
 from os import environ
 from secrets import token_hex
 import random
@@ -64,6 +65,7 @@ class User(Base, Stndrd, Age_times):
     #unread_notifications_relationship=relationship(
     #    "Notification",
     #    primaryjoin="and_(Notification.user_id==User.id, Notification.read==False)")
+    profile_font = Column(String(255), default="Default")
 
     referred_by = Column(Integer, default=None)
     is_banned = Column(Integer, default=0)
@@ -741,6 +743,16 @@ class User(Base, Stndrd, Age_times):
                 text("id asc")).all() if eval(
                 i.qualification_expr, {}, locs)]
         return titles
+
+    @property
+    def available_fonts(self):
+
+        locs = {"v": self,
+                "Board": Board,
+                "Submission": Submission
+                }
+        fonts = ["Default", "Alumni Sans Regular", "Chaucer", "DejaVu Serif", "Drama Sans", "Hack", "Life Savers Bold", "Open Sans Light", "Open Sans Semibold", "Radiotechnika", "Teresa Semibold", "TfGrotesk", "True Crimes"]
+        return fonts
 
     @property
     def can_make_guild(self):
