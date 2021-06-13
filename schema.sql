@@ -282,7 +282,8 @@ CREATE TABLE public.users (
     profile_set_utc integer DEFAULT 0,
     original_username character varying(255),
     name_changed_utc integer DEFAULT 0,
-    hide_bot boolean DEFAULT false
+    hide_bot boolean DEFAULT false,
+    profile_font character varying(255)
 );
 
 
