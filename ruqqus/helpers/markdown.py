@@ -33,6 +33,27 @@ class BoardMention(SpanToken):
 
         self.target = (match_obj.group(1), match_obj.group(2))
 
+class ChatMention(SpanToken):
+
+    pattern = re.compile("(^|\s|\n)#(\w{3,25})")
+    parse_inner = False
+
+    def __init__(self, match_obj):
+
+        self.target = (match_obj.group(1), match_obj.group(2))
+
+
+class Spoiler(SpanToken):
+
+    pattern=re.compile("(>!|<s>|\|\|)(.+?)(\|\||</s>|!<)")
+    parse_inner=True
+
+    def __init__(self, match_obj):
+
+        self.target=match_obj.group(2)
+
+
+
 
 # class OpMention(SpanToken):
 
@@ -47,7 +68,9 @@ class CustomRenderer(HTMLRenderer):
 
     def __init__(self, **kwargs):
         super().__init__(UserMention,
-                         BoardMention #,
+                         BoardMention,
+                         ChatMention,
+                         Spoiler #,
                          #OpMention
                          )
 
@@ -81,7 +104,22 @@ class CustomRenderer(HTMLRenderer):
         if not board or board.is_banned:
             return f"{space}+{target}"
         else:
-            return f'{space}<a href="{board.permalink}" class="d-inline-block"><img src="/+{board.name}/pic/profile" class="profile-pic-20 align-middle mr-1">+{board.name}</a>'
+            return f'{space}<a href="{board.permalink}" class="d-inline-block"><img src="/+{board.name}/pic/profile" class="profile-pic-20 mr-1">+{board.name}</a>'
+
+    def render_chat_mention(self, token):
+        space = token.target[0]
+        target = token.target[1]
+
+        board = get_guild(target, graceful=True)
+
+        if not board or board.is_banned:
+            return f"{space}#{target}"
+        else:
+            return f'{space}<a href="{board.permalink}/chat" class="d-inline-block"><img src="/+{board.name}/pic/profile" class="profile-pic-20 mr-1">#{board.name}</a>'
+
+    def render_spoiler(self, token):
+
+        return f'<span class="spoiler">{token.target}</span>'
 
     # def render_op_mention(self, token):
 

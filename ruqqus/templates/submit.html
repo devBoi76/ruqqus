@@ -105,9 +105,11 @@
                         <div id="image-upload-block">
                             <div><label class="mt-3">Image Upload</label></div>
 
+                            <img id="image-preview" class="w-100 d-block">
+
                             <label class="btn btn-secondary m-0" for="file-upload">
                                 <div id="filename-show">Select Image</div>
-                                <input id="file-upload" type="file" name="file" accept="image/*" onchange="document.getElementById('urlblock').classList.add('d-none');document.getElementById('filename-show').innerHTML=document.getElementById('file-upload').files[0].name;checkForRequired()" hidden>
+                                <input id="file-upload" type="file" name="file" accept="image/*" hidden>
                             </label>
 
                             <small class="form-text text-muted">Images uploaded will be public. Optional if you have text.</small>
@@ -116,7 +118,7 @@
                         <div id="image-upload-block">
                             <div><label class="mt-3">Image Upload</label></div>
 
-                            <label class="btn btn-secondary m-0" for="file-upload">
+                            <label class="btn btn-secondary m-0 disabled" for="file-upload">
                                 <div id="filename-show">Select Image</div>
                                 <input id="file-upload" type="file" accept="image/*" hidden disabled>
                             </label>
@@ -145,7 +147,7 @@
                         <div class="form-text text-small"><a href="/help/formatting" target="_blank">Formatting help</a></div>
 
                         <label for="board" class="mt-3">Post in guild<i class="fas fa-info-circle text-gray-400 ml-1" data-toggle="tooltip" data-placement="top" title="Guilds are Ruqqus communities. Enter a guild you would like your post to belong to."></i></label>
-                        <input class="form-control" name="board" placeholder="+general" value="{{ b.name if b else request.args.get('guild','') }}">
+                        <input class="form-control" name="board" value="{{ b.name if b else request.args.get('guild','') }}" required>
 
                         <label for="over_18" class="text-danger mt-3">NSFW?</label>
 
@@ -210,11 +212,11 @@
                             <li class="list-inline-item"><a href="/help/press" class="text-gray-500">Press</a></li>
                             <li class="list-inline-item"><a href="/help" class="text-gray-500">Help</a></li>
                             <li class="list-inline-item"><a href="https://www.twitter.com/ruqqus" class="text-gray-500">Twitter</a></li>
-                            <li class="list-inline-item"><a href="https://github.com/ruqqus/ruqqus" class="text-gray-500">Github</a></li>
+                            <li class="list-inline-item"><a href="https://github.com/ruqqus/ruqqus" class="text-gray-500">GitHub</a></li>
                             <li class="list-inline-item"><a href="/discord" class="text-gray-500">Discord</a></li>
                         </ul>
 
-                        <div class="text-muted text-small-extra mt-1">v. 2.34.4, © 2021 Ruqqus, LLC</div>
+                        <div class="text-muted text-small-extra mt-1">v. 2.37.0, © 2021 Ruqqus, LLC</div>
 
                     </div>
 
@@ -244,7 +246,7 @@
 
     <!-- Ruqqus JS -->
 
-    <script src="/assets/js/all_js.js?v=2.34.4"></script>
+    <script src="/assets/js/all_js.js?v=2.37.0"></script>
 
     <!-- ClipboardJS -->
 
@@ -268,6 +270,42 @@
             console.log(e);
         });
     </script>
+
+    {% if v.can_submit_image %}
+    <script>
+    document.onpaste = function(event) {
+        f=document.getElementById('file-upload');
+        f.files = event.clipboardData.files;
+        $('#filename-show').text(f.files[0].name);
+        $('#urlblock').addClass('d-none');
+
+        var fileReader = new FileReader();
+        fileReader.readAsDataURL(f.files[0]);
+        fileReader.addEventListener("load", function () {
+            $('#image-preview').attr('src', this.result);
+    });  
+        
+        $('#file-upload').attr('required', false);
+
+        checkForRequired();
+
+    }
+
+    $('#file-upload').on('change', function(e){
+        f=document.getElementById('file-upload');
+        $('#urlblock').addClass('d-none');
+        $('#filename-show').text($('#file-upload')[0].files[0].name);
+
+        var fileReader = new FileReader();
+        fileReader.readAsDataURL(f.files[0]);
+        fileReader.addEventListener("load", function () {
+            $('#image-preview').attr('src', this.result);
+    });  
+
+        checkForRequired();
+    })
+    </script>
+    {% endif %}
 
 </body>
 

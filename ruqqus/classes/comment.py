@@ -38,9 +38,11 @@ class Comment(Base, Age_times, Scores, Stndrd, Fuzzing):
         primaryjoin="Comment.id==CommentAux.id")
     author_id = Column(Integer, ForeignKey("users.id"))
     parent_submission = Column(Integer, ForeignKey("submissions.id"))
+
     # this column is foreignkeyed to comment(id) but we can't do that yet as
     # "comment" class isn't yet defined
-    parent_fullname = Column(Integer)
+    #parent_fullname = Column(Integer)
+
     created_utc = Column(Integer, default=0)
     edited_utc = Column(Integer, default=0)
     is_banned = Column(Boolean, default=False)
@@ -60,7 +62,6 @@ class Comment(Base, Age_times, Scores, Stndrd, Fuzzing):
     original_board_id = Column(Integer, ForeignKey("boards.id"))
 
     over_18 = Column(Boolean, default=False)
-    is_op = Column(Boolean, default=False)
     is_offensive = Column(Boolean, default=False)
     is_nsfl = Column(Boolean, default=False)
     is_bot = Column(Boolean, default=False)
@@ -267,13 +268,18 @@ class Comment(Base, Age_times, Scores, Stndrd, Fuzzing):
             'is_nsfw': self.over_18,
             'is_offensive': self.is_offensive,
             'is_nsfl': self.is_nsfl,
+            'is_distinguished': bool(self.distinguish_level),
+            'is_heralded': bool(self.gm_distinguish),
+            'herald_guild': self.distinguished_board.name if self.gm_distinguish else None,
             'permalink': self.permalink,
             'post_id': self.post.base36id,
             'score': self.score_fuzzed,
             'upvotes': self.upvotes_fuzzed,
             'downvotes': self.downvotes_fuzzed,
             'award_count': self.award_count,
-            'is_bot': self.is_bot
+            'is_bot': self.is_bot,
+            'guild_id': base36encode(self.post.board_id),
+            'voted': self.voted
             }
 
         if self.ban_reason:
@@ -300,7 +306,6 @@ class Comment(Base, Age_times, Scores, Stndrd, Fuzzing):
                     'parent': self.parent_fullname
                     }
         else:
-
             data=self.json_raw
 
             if self.level>=2:
@@ -322,9 +327,10 @@ class Comment(Base, Age_times, Scores, Stndrd, Fuzzing):
         data["author"]=self.author.json_core
         data["post"]=self.post.json_core
         data["guild"]=self.post.board.json_core
+        data["voted"]=self.voted
 
         if self.level >= 2:
-            data["parent"]=self.parent.json_core
+            data["parent"]=self.parent.json_core if self.parent else []
 
 
         return data
@@ -332,25 +338,8 @@ class Comment(Base, Age_times, Scores, Stndrd, Fuzzing):
         
     @property
     def voted(self):
-
-        x = self.__dict__.get("_voted")
-        if x is not None:
-            return x
-
-        if g.v:
-            x = g.db.query(CommentVote).filter_by(
-                comment_id=self.id,
-                user_id=g.v.id
-            ).first()
-
-            if x:
-                x = x.vote_type
-            else:
-                x = 0
-        else:
-            x = 0
-        return x
-
+        return self.__dict__.get("_voted")
+        
     @property
     def title(self):
         return self.__dict__.get("_title", self.author.title)
@@ -463,9 +452,41 @@ class Comment(Base, Age_times, Scores, Stndrd, Fuzzing):
     @property
     def is_exiled_for(self):
         return self.__dict__.get('_is_exiled_for', None)
-    
-    
 
+    @property
+    @lazy
+    def is_op(self):
+        return self.author_id==self.post.author_id and not self.author.is_deleted and not self.post.author.is_deleted and not self.post.is_deleted
+
+    @property
+    @lazy
+    def board(self):
+        return self.post.board
+
+    @property
+    def parent_fullname(self):
+        if self.parent_comment_id:
+            return f't3_{base36encode(self.parent_comment_id)}'
+        elif self.parent_submission:
+            return f't2_{base36encode(self.parent_submission)}'
+        else:
+            return None
+        
+    @property
+    def notif_type(self):
+        
+        #system notif
+        if self.author_id==1:
+            return 1 
+        
+        #reply
+        if g.v and self.parent.author_id==g.v.id:
+            return 2
+        
+        #mention
+        else:
+            return 3
+    
 
 class Notification(Base):
 
@@ -473,14 +494,14 @@ class Notification(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    comment_id = Column(Integer, ForeignKey("comments.id"))
+    comment_id = Column(Integer, ForeignKey("comments.id"), default=None)
+    submission_id = Column(Integer, ForeignKey("submissions.id"), default=None)
+
     read = Column(Boolean, default=False)
 
-    comment = relationship("Comment", lazy="joined", innerjoin=True)
+    comment = relationship("Comment", primaryjoin="Notification.comment_id==Comment.id")
+    post = relationship("Submission")
     user=relationship("User", innerjoin=True)
-
-    # Server side computed values (copied from corresponding comment)
-    created_utc = Column(Integer, server_default=FetchedValue())
 
     def __repr__(self):
 
@@ -489,3 +510,11 @@ class Notification(Base):
     @property
     def voted(self):
         return 0
+
+    @property
+    def target(self):
+        return self.comment if self.comment_id else self.post
+
+    @property
+    def created_utc(self):
+        return self.target.created_utc

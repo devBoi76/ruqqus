@@ -282,7 +282,7 @@ def admin_distinguish_comment(c_id, v):
 @validate_formkey
 def api_ban_guild(v, bid):
 
-    board = get_board(bid)
+    board = get_board(bid, v=v)
 
     board.is_banned = True
     board.ban_reason = request.form.get("reason", "")
@@ -297,7 +297,7 @@ def api_ban_guild(v, bid):
 @validate_formkey
 def api_unban_guild(v, bid):
 
-    board = get_board(bid)
+    board = get_board(bid, v=v)
 
     board.is_banned = False
     board.ban_reason = ""
@@ -631,11 +631,17 @@ def admin_nuke_user(v):
 
     user=get_user(request.form.get("user"))
 
+    note='admin_action'
+    if user.ban_reason:
+        note+=f" | {user.ban_reason}"
+
+
     for post in g.db.query(Submission).filter_by(author_id=user.id).all():
         if post.is_banned:
             continue
             
         post.is_banned=True
+        post.ban_reason=user.ban_reason
         g.db.add(post)
 
         ma=ModAction(
@@ -643,7 +649,7 @@ def admin_nuke_user(v):
             user_id=v.id,
             target_submission_id=post.id,
             board_id=post.board_id,
-            note="admin action"
+            note=note
             )
         g.db.add(ma)
 
@@ -659,7 +665,7 @@ def admin_nuke_user(v):
             user_id=v.id,
             target_comment_id=comment.id,
             board_id=comment.post.board_id,
-            note="admin action"
+            note=note
             )
         g.db.add(ma)
 

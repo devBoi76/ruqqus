@@ -31,8 +31,8 @@ def mfa_qr(secret, v):
     qr = qrcode.QRCode(
         error_correction=qrcode.constants.ERROR_CORRECT_L
     )
-    qr.add_data(x.provisioning_uri(v.username, issuer_name="Ruqqus"))
-    img = qr.make_image(fill_color="#805ad5", back_color="white")
+    qr.add_data(x.provisioning_uri(v.username, issuer_name=app.config["SITE_NAME"]))
+    img = qr.make_image(fill_color="#"+app.config["SITE_COLOR"], back_color="white")
 
     mem = io.BytesIO()
 
@@ -49,19 +49,10 @@ def api_is_available(name, v):
 
     name=name.lstrip().rstrip()
 
-    if len(name)<5 or len(name)>25:
+    if len(name)<3 or len(name)>25:
         return jsonify({name:False})
         
-    name=name.replace('_','\_')
-
-    x= g.db.query(User).options(
-        lazyload('*')
-        ).filter(
-        or_(
-            User.username.ilike(name),
-            User.original_username.ilike(name)
-            )
-        ).first()
+    x=get_user(name)
 
     if x:
         return jsonify({name: False})
@@ -74,24 +65,19 @@ def user_uid(uid):
 
     user = get_account(uid)
 
-    if user:
-        return redirect(user.permalink)
-    else:
-        abort(404)
+    return redirect(user.permalink)
 
 # Allow Id of user to be queryied, and then redirect the bot to the
 # actual user api endpoint.
 # So they get the data and then there will be no need to reinvent
 # the wheel.
-@app.route("/api/v1/user/by_id/<uid>", methods=["GET"])
+@app.route("/api/v1/uid/<uid>", methods=["GET"])
 @auth_desired
 @api("read")
 def user_by_uid(uid, v=None):
-    user=g.db.query(User).filter_by(id=base36decode(uid)).first()
-    if user == None:
-      abort(404)
+    user=get_account(uid)
     
-    return redirect(f"/api/v1/user/{user.username}")
+    return redirect(f'/api/v1/user/{user.username}/info')
         
 @app.route("/u/<username>", methods=["GET"])
 def redditor_moment_redirect(username):
@@ -113,61 +99,63 @@ def u_username(username, v=None):
 
     # check for wrong cases
 
-    if username != u.username:
-        return redirect(request.path.replace(username, u.username))
+    #if username != u.username:
+        #return redirect(request.path.replace(username, u.username))
 
     if u.reserved:
         return {'html': lambda: render_template("userpage_reserved.html",
                                                 u=u,
                                                 v=v),
-                'api': lambda: {"error": "That user is banned"}
+                'api': lambda: {"error": f"That username is reserved for: {u.reserved}"}
                 }
 
-    if u.is_suspended and (not v or v.admin_level < 3):
+    if u.is_suspended and not (v and (v.admin_level >=3 or v.id==u.id)):
         return {'html': lambda: render_template("userpage_banned.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": "That user is banned"}
                 }
 
-    if u.is_deleted and (not v or v.admin_level < 3):
+    if u.is_deleted and not (v and v.admin_level >= 3):
         return {'html': lambda: render_template("userpage_deleted.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": "That user deactivated their account."}
                 }
 
-    if u.is_private and (not v or (v.id != u.id and v.admin_level < 3)):
+    if u.is_private and not (v and (v.admin_level >=3 or v.id==u.id)):
         return {'html': lambda: render_template("userpage_private.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": "That userpage is private"}
                 }
 
-    if u.is_blocking and (not v or v.admin_level < 3):
+    if u.is_blocking and not (v and v.admin_level >= 3):
         return {'html': lambda: render_template("userpage_blocking.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": f"You are blocking @{u.username}."}
                 }
 
-    if u.is_blocked and (not v or v.admin_level < 3):
+    if u.is_blocked and not (v and v.admin_level >= 3):
         return {'html': lambda: render_template("userpage_blocked.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": "This person is blocking you."}
                 }
 
+    sort = request.args.get("sort", "new")
+    t = request.args.get("t", "all")
     page = int(request.args.get("page", "1"))
     page = max(page, 1)
 
-    ids = u.userpagelisting(v=v, page=page)
+    ids = u.userpagelisting(v=v, page=page, sort=sort, t=t)
 
     # we got 26 items just to see if a next page exists
     next_exists = (len(ids) == 26)
     ids = ids[0:25]
 
-    listing = get_posts(ids, v=v, sort="new")
+    listing = get_posts(ids, v=v)
 
     return {'html': lambda: render_template("userpage.html",
                                             u=u,
@@ -203,38 +191,38 @@ def u_username_comments(username, v=None):
         return {'html': lambda: render_template("userpage_reserved.html",
                                                 u=u,
                                                 v=v),
-                'api': lambda: {"error": "That user is banned"}
+                'api': lambda: {"error": f"That username is reserved for: {u.reserved}"}
                 }
 
-    if u.is_suspended and (not v or v.admin_level < 3):
+    if u.is_suspended and not (v and (v.admin_level >=3 or v.id==u.id)):
         return {'html': lambda: render_template("userpage_banned.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": "That user is banned"}
                 }
 
-    if u.is_deleted and (not v or v.admin_level < 3):
+    if u.is_deleted and not (v and v.admin_level >= 3):
         return {'html': lambda: render_template("userpage_deleted.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": "That user deactivated their account."}
                 }
 
-    if u.is_private and (not v or (v.id != u.id and v.admin_level < 3)):
+    if u.is_private and not (v and (v.admin_level >=3 or v.id==u.id)):
         return {'html': lambda: render_template("userpage_private.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": "That userpage is private"}
                 }
 
-    if u.is_blocking and (not v or v.admin_level < 3):
+    if u.is_blocking and not (v and v.admin_level >= 3):
         return {'html': lambda: render_template("userpage_blocking.html",
                                                 u=u,
                                                 v=v),
                 'api': lambda: {"error": f"You are blocking @{u.username}."}
                 }
 
-    if u.is_blocked and (not v or v.admin_level < 3):
+    if u.is_blocked and not (v and v.admin_level >= 3):
         return {'html': lambda: render_template("userpage_blocked.html",
                                                 u=u,
                                                 v=v),
@@ -243,7 +231,12 @@ def u_username_comments(username, v=None):
 
     page = int(request.args.get("page", "1"))
 
-    ids = user.commentlisting(v=v, page=page)
+    ids = user.commentlisting(
+        v=v, 
+        page=page,
+        sort=request.args.get("sort","new"),
+        t=request.args.get("t","all")
+        )
 
     # we got 26 items just to see if a next page exists
     next_exists = (len(ids) == 26)
@@ -380,6 +373,27 @@ def saved_listing(v):
             }
 
 
+@app.post("/@<username>/toggle_bell")
+@app.post("/api/v2/users/<username>/toggle_bell")
+@auth_required
+@api("update")
+def toggle_user_bell(username, v):
+
+    user=get_user(username, v=v, graceful=True)
+    if not user:
+        return jsonify({"error": f"User '@{username}' not found."}), 404
+
+    follow=g.db.query(Follow).filter_by(user_id=v.id, target_id=user.id).first()
+    if not follow:
+        return jsonify({"error": f"You aren't following @{user.username}"}), 404
+
+    follow.get_notifs = not follow.get_notifs
+    g.db.add(follow)
+    g.db.commit()
+
+    return jsonify({"message":f"Notifications {'en' if follow.get_notifs else 'dis'}abled for @{user.username}"})
+
+
 def convert_file(html):
 
     if not isinstance(html, str):
@@ -509,7 +523,7 @@ def info_packet(username, method="html"):
 
 
 
-@app.route("/my_info", methods=["POST"])
+#@app.route("/my_info", methods=["POST"])
 #@limiter.limit("2/day")
 @auth_required
 @validate_formkey
@@ -527,7 +541,4 @@ def my_info_post(v):
     return "started"
 
 
-@app.route("/my_info", methods=["GET"])
-@auth_required
-def my_info_get(v):
-    return render_template("my_info.html", v=v)
+

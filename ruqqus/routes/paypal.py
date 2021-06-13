@@ -132,11 +132,14 @@ def shop_buy_coins_completed(v):
     id=base36decode(id)
     txn=g.db.query(PayPalTxn
         #).with_for_update(
-        ).options(lazyload('*')).filter_by(user_id=v.id, id=id, status=1).first()
+        ).filter_by(user_id=v.id, id=id, status=1).first()
     #v=g.db.query(User).with_for_update().options(lazyload('*')).filter_by(id=v.id).first()
 
     if not txn:
         abort(400)
+
+    if txn.promo and not txn.promo.promo_is_active:
+        return jsonfy({"error":f"The promo code `{txn.promo.code}` is not currently valid. Please begin a new transaction."}), 422
 
     if not CLIENT.capture(txn):
         abort(402)
@@ -301,6 +304,8 @@ def gift_post_pid(pid, v):
         g.db.flush()
     except:
         pass
+    
+    g.db.commit()
 
     return jsonify({"message":"Tip Successful!"})
 
@@ -382,6 +387,8 @@ def gift_comment_pid(cid, v):
         g.db.flush()
     except:
         pass
+    
+    g.db.commit()
 
     return jsonify({"message":"Tip Successful!"})
 

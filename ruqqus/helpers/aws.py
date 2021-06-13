@@ -13,7 +13,7 @@ from ruqqus.classes.images import BadPic
 from ruqqus.__main__ import db_session
 from .base36 import hex2bin
 
-BUCKET = "i.ruqqus.com"
+BUCKET = environ.get("S3_BUCKET_NAME",'i.ruqqus.com').lstrip().rstrip()
 CF_KEY = environ.get("CLOUDFLARE_KEY").lstrip().rstrip()
 CF_ZONE = environ.get("CLOUDFLARE_ZONE").lstrip().rstrip()
 
@@ -37,11 +37,11 @@ def check_phash(db, name):
 
 def upload_from_url(name, url):
 
-    print('upload from url')
+    #print('upload from url')
 
     x = requests.get(url)
 
-    print('got content')
+    #print('got content')
 
     tempname = name.replace("/", "_")
 

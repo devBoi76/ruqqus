@@ -401,7 +401,7 @@ function switch_css() {
   if (css.href.includes("/assets/style/main.css")) {
     post("/settings/dark_mode/1",
       callback=function(){
-        css.href="/assets/style/main_dark.css?v=2.34.4";
+        css.href="/assets/style/main_dark.css?v=2.37.0";
         dswitch.classList.remove("fa-toggle-off");
         dswitch.classList.add("fa-toggle-on");
         dswitchmobile.classList.remove("fa-toggle-off");
@@ -412,7 +412,7 @@ function switch_css() {
   else {
     post("/settings/dark_mode/0",
       callback=function(){
-        css.href="/assets/style/main.css?v=2.34.4";
+        css.href="/assets/style/main.css?v=2.37.0";
         dswitch.classList.remove("fa-toggle-on");
         dswitch.classList.add("fa-toggle-off");
         dswitchmobile.classList.remove("fa-toggle-on");
@@ -723,12 +723,12 @@ function post_toast(url, callback) {
         window.location.href = JSON.parse(xhr.response)["redirect"]
       } else {
         data=JSON.parse(xhr.response);
-        
+
         $('#toast-post-error').toast('dispose');
         $('#toast-post-error').toast('show');
         document.getElementById('toast-post-error-text').innerText = data["error"];
         return false
-        
+
       }
     };
 
@@ -736,8 +736,25 @@ function post_toast(url, callback) {
 
   }
 
+// Bell Notifications
+
+$('.bell-button').click(function (event) {
+
+  if (event.which != 1) {
+    return
+  }
+
+  $('.bell-icon').toggleClass('fa-bell')
+  $('.bell-icon').toggleClass('fa-bell-on')
+  $('.bell-icon').toggleClass('text-purple')
+
+  post_toast($(this).data('url'))
+
+});
+
 
 //Admin post modding
+
 function removePost(post_id) {
   url="/api/ban_post/"+post_id
 
@@ -808,7 +825,7 @@ $('#username-register').on('input', function () {
 
   var ruqqusAPI = '/api/is_available/' + charCount;
 
-  if (charCount.length >= 5) {
+  if (charCount.length >= 3) {
 
     $.getJSON(ruqqusAPI, function(result) {
       $.each(result, function(i, field) {
@@ -824,8 +841,8 @@ $('#username-register').on('input', function () {
     // Change alert text
     id.innerHTML = '<span class="form-text font-weight-bold text-success mt-1">Username is a-okay!';
 
-    if (charCount.length < 5) {
-      id.innerHTML = '<span class="form-text font-weight-bold text-muted mt-1">Username must be at least 5 characters long.';
+    if (charCount.length < 3) {
+      id.innerHTML = '<span class="form-text font-weight-bold text-muted mt-1">Username must be at least 3 characters long.';
     }
     else if (charCount.length > 25) {
       id.innerHTML = '<span class="form-text font-weight-bold text-danger mt-1">Username must be 25 characters or less.';
@@ -1008,7 +1025,6 @@ var downvote = function(event) {
   post_toast("/api/vote/" + type + "/" + id + "/" + voteDirection);
   
 }
-
 
 var register_votes = function() {
   var upvoteButtons = document.getElementsByClassName('upvote-button')
@@ -1257,7 +1273,7 @@ else {
 	linkText.textContent = 'View original';
 }
 
-if (image.includes("media.giphy.com")) {
+if (image.startsWith("https://media.giphy.com")) {
 	attribution.innerHTML = '<img src="/assets/images/icons/PoweredBy_200px-Black_HorizLogo.png" style="width: 100px;">';
 
   var GIPHYsrc = image.replace(/\b100w\b~?/g, 'giphy');
@@ -2065,17 +2081,21 @@ if (("standalone" in window.navigator) &&       // Check if "standalone" propert
 
 } else {
   if (window.innerWidth <= 737){
-    $('#mobile-prompt').tooltip('show')
-    $('.tooltip')[0].addEventListener(
-      'click', 
-      function(event){
-        $('#mobile-prompt').tooltip('hide')
-        var xhr = new XMLHttpRequest();
-        xhr.withCredentials=true;
-        xhr.open("POST", '/dismiss_mobile_tip', true);
-        xhr.send();
-      }
+    try {
+      $('#mobile-prompt').tooltip('show')
+      $('.tooltip')[0].addEventListener(
+        'click',
+        function(event){
+          $('#mobile-prompt').tooltip('hide')
+          var xhr = new XMLHttpRequest();
+          xhr.withCredentials=true;
+          xhr.open("POST", '/dismiss_mobile_tip', true);
+          xhr.send();
+        }
       )
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 
@@ -2090,3 +2110,15 @@ $('.mention-user').click(function (event) {
   window.location.href='/@' + $(this).data('original-name');
 
 });
+
+$('.expandable-image').click( function(event) {
+
+  if (event.which != 1) {
+    return
+  }
+  event.preventDefault();
+
+  var url= $(this).data('url');
+
+  expandDesktopImage(url,url);
+})

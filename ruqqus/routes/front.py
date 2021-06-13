@@ -17,15 +17,24 @@ def slash_post():
     return redirect("/")
 
 
-@app.route("/notifications", methods=["GET"])
+@app.get("/notifications")
+@app.get("/notifications/all")
+@app.get("/notifications/mentions")
+@app.get("/notifications/replies")
+@app.get("/notifications/system")
+@app.route("/api/v1/notifications", methods=["GET"])
 @auth_required
+@api("read")
 def notifications(v):
 
     page = int(request.args.get('page', 1))
     all_ = request.args.get('all', False)
 
     cids = v.notification_commentlisting(page=page,
-                                         all_=all_
+                                         all_=request.path=="/notifications/all",
+                                         mentions_only=request.path=="/notifications/mentions",
+                                         replies_only=request.path=="/notifications/replies",
+                                         system_only=request.path=="/notifications/system"
                                          )
     next_exists = (len(cids) == 26)
     cids = cids[0:25]
@@ -57,26 +66,58 @@ def notifications(v):
             c._is_username_mention = True
             listing.append(c)
 
-    return render_template("notifications.html",
-                           v=v,
-                           notifications=listing,
-                           next_exists=next_exists,
-                           page=page,
-                           standalone=True,
-                           render_replies=True,
-                           is_notification_page=True)
+    return {'html': lambda: render_template("notifications.html",
+                            v=v,
+                            notifications=listing,
+                            next_exists=next_exists,
+                            page=page,
+                            standalone=True,
+                            render_replies=True,
+                            is_notification_page=True),
+            'api': lambda: jsonify({"data": [x.json for x in listing]})}
+
+@app.get("/notifications/posts")
+@auth_required
+@api("read")
+def notifications_posts(v):
+
+    page=int(request.args.get("page", 1))
+
+    pids=v.notification_postlisting(
+        page=page,
+        all_=request.args.get("all")
+        )
+
+    next_exists=(len(pids)==26)
+    pids=pids[0:25]
+
+    posts=get_posts(pids, v=v, sort="new")
+
+    return {'html': lambda: render_template("notifications_posts.html",
+                            v=v,
+                            notifications=posts,
+                            next_exists=next_exists,
+                            page=page,
+                            is_notification_page=True),
+            'api': lambda: jsonify({"data": [x.json for x in listing]})
+            }
 
 @cache.memoize(timeout=900)
-
-def frontlist(v=None, sort="hot", page=1, nsfw=False, nsfl=False,
+def frontlist(v=None, sort=None, page=1, nsfw=False, nsfl=False,
               t=None, ids_only=True, categories=[], filter_words='', **kwargs):
 
     # cutoff=int(time.time())-(60*60*24*30)
+
+    if sort == None:
+        if v: sort = v.defaultsorting
+        else: sort = "hot"
 
     if sort == "hot":
         sort_func = Submission.score_hot.desc
     elif sort == "new":
         sort_func = Submission.created_utc.desc
+    elif sort == "old":
+        sort_func = Submission.created_utc.asc
     elif sort == "disputed":
         sort_func = Submission.score_disputed.desc
     elif sort == "top":
@@ -89,7 +130,8 @@ def frontlist(v=None, sort="hot", page=1, nsfw=False, nsfl=False,
     posts = g.db.query(
         Submission
         ).options(
-            lazyload('*')
+            lazyload('*'),
+            Load(Board).lazyload('*')
         ).filter_by(
             is_banned=False,
             stickied=False
@@ -103,9 +145,9 @@ def frontlist(v=None, sort="hot", page=1, nsfw=False, nsfl=False,
 
     if (v and v.hide_offensive) or not v:
         posts = posts.filter_by(is_offensive=False)
-        
+    
     if v and v.hide_bot:
-        posts = posts.filter_by(is_bot=False)
+        posts = posts.filter(Submission.is_bot==False)
 
     if v and v.admin_level >= 4:
         board_blocks = g.db.query(
@@ -132,12 +174,12 @@ def frontlist(v=None, sort="hot", page=1, nsfw=False, nsfl=False,
         blocking = g.db.query(
             UserBlock.target_id).filter_by(
             user_id=v.id).subquery()
-        blocked = g.db.query(
-            UserBlock.user_id).filter_by(
-            target_id=v.id).subquery()
+        # blocked = g.db.query(
+        #     UserBlock.user_id).filter_by(
+        #     target_id=v.id).subquery()
         posts = posts.filter(
-            Submission.author_id.notin_(blocking),
-            Submission.author_id.notin_(blocked)
+            Submission.author_id.notin_(blocking) #,
+        #    Submission.author_id.notin_(blocked)
         )
 
         board_blocks = g.db.query(
@@ -146,7 +188,7 @@ def frontlist(v=None, sort="hot", page=1, nsfw=False, nsfl=False,
 
         posts = posts.filter(Submission.board_id.notin_(board_blocks))
     else:
-        posts = posts.filter_by(post_public=True)
+        posts = posts.filter(Submission.post_public==True)
 
     # board opt out of all
     if v:
@@ -170,6 +212,13 @@ def frontlist(v=None, sort="hot", page=1, nsfw=False, nsfl=False,
     
     if categories:
         posts=posts.filter(Board.subcat_id.in_(tuple(categories)))
+        
+    if (v and v.hide_offensive) or not v:
+        posts=posts.filter(
+            Board.subcat_id.notin_([44, 108]) 
+            )
+
+    posts=posts.filter(Submission.board_id!=1)
 
     posts=posts.options(contains_eager(Submission.board))
 
@@ -182,6 +231,7 @@ def frontlist(v=None, sort="hot", page=1, nsfw=False, nsfl=False,
             #print(word)
             posts=posts.filter(not_(SubmissionAux.title.ilike(f'%{word}%')))
 
+    if t == None and v: t = v.defaulttime
     if t:
         now = int(time.time())
         if t == 'day':
@@ -209,6 +259,8 @@ def frontlist(v=None, sort="hot", page=1, nsfw=False, nsfl=False,
         posts = posts.order_by(Submission.score_best.desc())
     elif sort == "new":
         posts = posts.order_by(Submission.created_utc.desc())
+    elif sort == "old":
+        posts = posts.order_by(Submission.created_utc.asc())
     elif sort == "disputed":
         posts = posts.order_by(Submission.score_disputed.desc())
     elif sort == "top":
@@ -234,11 +286,17 @@ def home(v):
     if v and [i for i in v.subscriptions if i.is_active]:
 
         only=request.args.get("only",None)
-        sort=request.args.get("sort","hot")
-        
-        page=max(int(request.args.get("page",1)),0)
-        t=request.args.get('t', 'all')
 
+        if v:
+            defaultsorting = v.defaultsorting
+            defaulttime = v.defaulttime
+        else:
+            defaultsorting = "hot"
+            defaulttime = "all"
+
+        sort=request.args.get("sort",defaultsorting)
+        t=request.args.get('t', defaulttime)
+        page=max(int(request.args.get("page",1)),0)
         ignore_pinned = bool(request.args.get("ignore_pinned", False))
 
         
@@ -264,7 +322,7 @@ def home(v):
         ids=ids[0:25]
 
         # If page 1, check for sticky
-        if page == 1 and sort != "new" and not ignore_pinned:
+        if page == 1 and not ignore_pinned:
             sticky = g.db.query(Submission.id).filter_by(stickied=True).first()
 
 
@@ -324,8 +382,15 @@ def front_all(v):
     # prevent invalid paging
     page = max(page, 1)
 
-    sort_method = request.args.get("sort", "hot")
-    t = request.args.get('t', 'all')
+    if v:
+        defaultsorting = v.defaultsorting
+        defaulttime = v.defaulttime
+    else:
+        defaultsorting = "hot"
+        defaulttime = "all"
+
+    sort=request.args.get("sort",defaultsorting)
+    t=request.args.get('t', defaulttime)
     ignore_pinned = bool(request.args.get("ignore_pinned", False))
 
 
@@ -356,7 +421,7 @@ def front_all(v):
 
     #print(cats)
 
-    ids = frontlist(sort=sort_method,
+    ids = frontlist(sort=sort,
                     page=page,
                     nsfw=(v and v.over_18 and not v.filter_nsfw),
                     nsfl=(v and v.show_nsfl),
@@ -381,6 +446,83 @@ def front_all(v):
         if sticky:
             ids = [sticky.id] + ids
     # check if ids exist
+    posts = get_posts(ids, sort=sort, v=v)
+
+    return {'html': lambda: render_template("home.html",
+                                            v=v,
+                                            listing=posts,
+                                            next_exists=next_exists,
+                                            sort_method=sort,
+                                            time_filter=t,
+                                            page=page,
+                                            CATEGORIES=CATEGORIES
+                                            ),
+            'inpage': lambda: render_template("submission_listing.html",
+                                              v=v,
+                                              listing=posts
+                                              ),
+            'api': lambda: jsonify({"data": [x.json for x in posts],
+                                    "next_exists": next_exists
+                                    }
+                                   )
+            }
+
+#@app.route("/subcat/<name>", methods=["GET"])
+#@auth_desired
+#@api("read")
+def subcat(name, v):
+
+    if v:
+        defaultsorting = v.defaultsorting
+        defaulttime = v.defaulttime
+    else:
+        defaultsorting = "hot"
+        defaulttime = "all"
+
+    sort=request.args.get("sort",defaultsorting)
+    t=request.args.get('t', defaulttime)
+
+    page = int(request.args.get("page") or 1)
+
+    # prevent invalid paging
+    page = max(page, 1)
+    
+    if "+" in name:
+        ids = []
+        for name in name.split("+"):
+            ids += frontlist(sort=sort,
+                            page=page,
+                            nsfw=(v and v.over_18 and not v.filter_nsfw),
+                            nsfl=(v and v.show_nsfl),
+                            t=t,
+                            v=v,
+                            hide_offensive=(v and v.hide_offensive) or not v,
+                            hide_bot=(v and v.hide_bot),
+                            gt=int(request.args.get("utc_greater_than", 0)),
+                            lt=int(request.args.get("utc_less_than", 0)),
+                            filter_words=v.filter_words if v else [],
+                            categories=[name]
+                            )
+    else:
+        ids = frontlist(sort=sort,
+                        page=page,
+                        nsfw=(v and v.over_18 and not v.filter_nsfw),
+                        nsfl=(v and v.show_nsfl),
+                        t=t,
+                        v=v,
+                        hide_offensive=(v and v.hide_offensive) or not v,
+                        hide_bot=(v and v.hide_bot),
+                        gt=int(request.args.get("utc_greater_than", 0)),
+                        lt=int(request.args.get("utc_less_than", 0)),
+                        filter_words=v.filter_words if v else [],
+                        categories=[name]
+                        )
+
+    # check existence of next page
+    next_exists = (len(ids) == 26)
+    ids = ids[0:25]
+
+    # check if ids exist
     posts = get_posts(ids, sort=sort_method, v=v)
 
     return {'html': lambda: render_template("home.html",
@@ -397,17 +539,16 @@ def front_all(v):
                                               listing=posts
                                               ),
             'api': lambda: jsonify({"data": [x.json for x in posts],
-                                    "next_exists": next_exists
-                                    }
-                                   )
-            }
+                                    "next_exists": next_exists})}
 
 
 @cache.memoize(600)
 def guild_ids(sort="subs", page=1, nsfw=False, cats=[]):
     # cutoff=int(time.time())-(60*60*24*30)
 
-    guilds = g.db.query(Board).filter_by(is_banned=False)
+    guilds = g.db.query(Board).filter_by(is_banned=False).filter(
+        Board.subcat_id != 108
+    )
 
     if not nsfw:
         guilds = guilds.filter_by(over_18=False)
@@ -493,7 +634,9 @@ def browse_guilds(v):
 
 
 @app.route('/mine', methods=["GET"])
+@app.route("/api/v1/mine", methods=["GET"])
 @auth_required
+@api("read")
 def my_subs(v):
 
     kind = request.args.get("kind", "guilds")
@@ -518,35 +661,41 @@ def my_subs(v):
         content = [x for x in content.offset(25 * (page - 1)).limit(26)]
         next_exists = (len(content) == 26)
         content = content[0:25]
+        
+        for board in content:
+            board._is_subscribed=True
 
-        return render_template("mine/boards.html",
+        return {"html": lambda: render_template("mine/boards.html",
                                v=v,
                                boards=content,
                                next_exists=next_exists,
                                page=page,
-                               kind="guilds")
+                               kind="guilds"),
+                "api": lambda: jsonify({"data": [x.json for x in content]})}
 
     elif kind == "users":
 
-        u = g.db.query(User)
+        u = g.db.query(User).filter_by(is_banned=0, is_deleted=False)
+
         follows = g.db.query(Follow).filter_by(user_id=v.id).subquery()
 
         content = u.join(follows,
                          User.id == follows.c.target_id,
                          isouter=False)
 
-        content = content.order_by(User.follower_count.desc())
+        content = content.order_by(User.stored_subscriber_count.desc())
 
         content = [x for x in content.offset(25 * (page - 1)).limit(26)]
         next_exists = (len(content) == 26)
         content = content[0:25]
 
-        return render_template("mine/users.html",
+        return {"html": lambda: render_template("mine/users.html",
                                v=v,
                                users=content,
                                next_exists=next_exists,
                                page=page,
-                               kind="users")
+                               kind="users"),
+                "api": lambda: jsonify({"data": [x.json for x in content]})}
 
     else:
         abort(400)
