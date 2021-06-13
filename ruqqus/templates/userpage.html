@@ -1,3 +1,14 @@
+<style>
+    {% if u.profile_font != "Default" %}
+    @font-face {
+    font-family: "{{ u.profile_font }}";
+    src: url("../assets/fonts/{{ u.profile_font }}")
+    }
+    #main-content-col {
+        font-family: "{{ u.profile_font }}";
+    }
+    {% endif %}
+</style>
 {% extends "default.html" %}
 
 {% block pagetype %}userpage{% endblock %}
