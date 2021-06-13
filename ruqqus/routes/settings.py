@@ -27,6 +27,11 @@ valid_password_regex = re.compile("^.{8,100}$")
 def settings_profile_post(v):
 
     updated = False
+    if request.values.get("profile_font"):
+        if v.has_premium:
+            updated = True
+            v.profile_font = request.values.get("profile_font")
+            cache.delete_memoized(User.idlist, v)
 
     if request.values.get("over18", v.over_18) != v.over_18:
         updated = True
