@@ -219,7 +219,6 @@
             <h2 class="h5" id="bio" name="bio">Your Profile</h2>
 
             <p class="text-small text-muted">Edit how others see you on Ruqqus.</p>
-
             <div class="settings-section rounded mb-0">
 
               <div class="body d-lg-flex border-bottom">
@@ -302,6 +301,31 @@
                </div>
 
              </div>
+             <div class="body d-lg-flex border-bottom">
+            <div class="body w-lg-100 my-auto">
+            {% if v.has_premium %}
+                <label class="text-black w-lg-25">Profile Page Font</label>
+                    <div class="w-lg-100">
+                        <p>Select a font to be displayed on your user page.</p>
+                        <div class="input-group mb2">
+                            <select id='font-selector' class="form-control" form="profile-settings" name="profile_font" onchange="post_toast('/settings/profile?profile_font='+document.getElementById('font-selector').value)">
+                                <option value="{{ v.profile_font }}">{{ v.profile_font }}</option>
+                                {% for font in v.available_fonts %}
+                                    {% if font != v.profile_font %}
+                                        <option value="{{ font }}">{{ font }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                {% else %}
+                    <label class="text-muted w-lg-25">Profile Page Font</label>
+                    <div class="w-lg-100 text-muted">
+                        <p>Premium users can change the font displayed on their profile page.</p>
+                    </div>
+                {% endif %}
+                </div>
+              </div>
 
              <div class="d-lg-flex border-bottom">
 
