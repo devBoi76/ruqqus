@@ -70,24 +70,12 @@ def api_vote_post(post_id, x, v):
 		g.db.flush()
 	except:
 		return jsonify({"error":"Vote already exists."}), 422
-		
-	post.upvotes = post.ups
-	post.downvotes = post.downs
 	
-	g.db.add(post)
-	g.db.flush()
-
-	post.score_disputed = post.rank_fiery
-	post.score_top = post.score
-	post.score_best = post.rank_best
-
-	g.db.add(post)
-
-	g.db.commit()
-		
-	now = int(time.time())
-	cutoff = now - 3600*24
-	posts = g.db.query(Submission).options(lazyload('*')).filter_by(is_banned=False, deleted_utc=0).filter(Submission.created_utc > cutoff).all()
+	if "100" in str(now): posts = g.db.query(Submission).options(lazyload('*')).filter_by(is_banned=False, deleted_utc=0).all()
+	else:
+		now = int(time.time())
+		cutoff = now - 3600*24
+		posts = g.db.query(Submission).options(lazyload('*')).filter_by(is_banned=False, deleted_utc=0).filter(Submission.created_utc > cutoff).all()
 
 	for post in posts:
 		try: 
@@ -101,21 +89,6 @@ def api_vote_post(post_id, x, v):
 			g.db.add(post)
 		except: pass
 	g.db.commit()
-	
-	if "100" in str(now):
-		posts = g.db.query(Submission).options(lazyload('*')).filter_by(is_banned=False, deleted_utc=0).all()
-		for post in posts:
-			post.upvotes = post.ups
-			post.downvotes = post.downs
-			g.db.add(post)
-			g.db.flush()
-			post.score_disputed = post.rank_fiery
-			post.score_top = post.score
-			post.score_best = post.rank_best
-			g.db.add(post)
-		g.db.commit()
-
-	# print(f"Vote Event: @{v.username} vote {x} on post {post_id}")
 
 	return "", 204
 
