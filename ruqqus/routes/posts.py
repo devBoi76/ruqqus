@@ -97,7 +97,7 @@ def incoming_post_shortlink(base36id=None):
 @api("read")
 def post_base36id(pid, anything=None, v=None):
 	try: pid = int(pid)
-	except Exception as e: print(e)
+	except Exception as e: pass
 		
 	post = get_post_with_comments(pid, v=v, sort_type=request.args.get("sort", "top"))
 	
