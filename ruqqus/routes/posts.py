@@ -832,7 +832,7 @@ def submit_post(v):
 	
 	for rd in ["https://reddit.com/", "https://new.reddit.com/", "https://www.reddit.com/"]:
 		if url.startswith(rd):
-			url = url.replace(rd, "https://old,reddit.com/")
+			url = url.replace(rd, "https://old.reddit.com/")
 
 	new_post_aux = SubmissionAux(id=new_post.id,
 								 url=url,
