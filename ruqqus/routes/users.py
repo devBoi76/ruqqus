@@ -363,11 +363,11 @@ def user_profile_uid(uid):
 	return redirect(x.profile_url)
 
 
-@app.route("/@<username>/saved", methods=["GET"])
+@app.route("/saved", methods=["GET"])
 @app.route("/api/v1/saved", methods=["GET"])
 @auth_required
 @api("read")
-def saved_listing(v, username):
+def saved_listing(v):
 
 	print("saved listing")
 
