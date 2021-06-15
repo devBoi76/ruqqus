@@ -2,7 +2,7 @@ from urllib.parse import urlparse, ParseResult, urlunparse, urlencode
 import mistletoe
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
-from urllib import urlencode
+from urllib.parse import quote as urlencode
 from bs4 import BeautifulSoup
 import secrets
 import threading
