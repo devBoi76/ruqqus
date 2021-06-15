@@ -90,10 +90,10 @@ def api_vote_post(post_id, x, v):
 	posts = g.db.query(Submission).options(lazyload('*')).filter_by(is_banned=False, deleted_utc=0).filter(Submission.created_utc > cutoff).all()
 
 	for post in posts:
-		post.upvotes = post.ups
-		post.downvotes = post.downs
-		g.db.add(post)
 		try: 
+			post.upvotes = post.ups
+			post.downvotes = post.downs
+			g.db.add(post)
 			g.db.flush()
 			post.score_disputed = post.rank_fiery
 			post.score_top = post.score
