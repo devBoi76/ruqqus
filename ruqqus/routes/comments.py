@@ -57,7 +57,7 @@ def comment_cid_api_redirect(cid=None, pid=None):
 def post_pid_comment_cid(cid, pid=None, anything=None, v=None):
 
 	try: cid = int(cid)
-	except: pass
+	except Exception as e: print(e)
 	
 	comment = get_comment(cid, v=v)
 	
