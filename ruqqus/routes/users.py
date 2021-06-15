@@ -384,6 +384,7 @@ def saved_listing(v, username):
 	listing = get_posts(ids, v=v, sort="new")
 
 	return {'html': lambda: render_template("userpage_saved.html",
+											u=v,
 											v=v,
 											listing=listing,
 											page=page,
