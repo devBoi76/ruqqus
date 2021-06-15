@@ -830,6 +830,9 @@ def submit_post(v):
 	g.db.add(new_post)
 	g.db.flush()
 
+	if url.startswith("https://reddit.com/") or url.startswith("https://new.reddit.com/"):
+		url = url.replace("https://reddit.com/", "https://old,reddit.com/").replace("https://new.reddit.com/", "https://old,reddit.com/")
+
 	new_post_aux = SubmissionAux(id=new_post.id,
 								 url=url,
 								 body=body,
