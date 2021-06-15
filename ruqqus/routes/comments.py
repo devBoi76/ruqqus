@@ -709,12 +709,34 @@ def delete_comment(cid, v):
 
 	g.db.add(c)
 
-
 	cache.delete_memoized(User.commentlisting, v)
 
 	return {"html": lambda: ("", 204),
 			"api": lambda: ("", 204)}
 
+@app.route("/undelete/comment/<cid>", methods=["POST"])
+@app.route("/api/v1/undelete/comment/<cid>", methods=["POST"])
+@auth_required
+@validate_formkey
+@api("delete")
+def undelete_comment(cid, v):
+
+	c = g.db.query(Comment).filter_by(id=base36decode(cid)).first()
+
+	if not c:
+		abort(404)
+
+	if not c.author_id == v.id:
+		abort(403)
+
+	c.deleted_utc = 0
+
+	g.db.add(c)
+
+	cache.delete_memoized(User.commentlisting, v)
+
+	return {"html": lambda: ("", 204),
+			"api": lambda: ("", 204)}
 
 @app.route("/embed/comment/<cid>", methods=["GET"])
 @app.route("/embed/post/<pid>/comment/<cid>", methods=["GET"])

@@ -8,7 +8,7 @@
 
 <!--conditions under which a comment might be hidden-->
 
-{% if (c.is_banned or c.deleted_utc or c.is_blocking or c.is_blocked) and not (v and v.admin_level>0) %}
+{% if (c.is_banned or (c.deleted_utc > 0 and c.author.id != v.id) or c.is_blocking or c.is_blocked) and not (v and v.admin_level>0) %}
 
 
 
@@ -238,8 +238,12 @@
 
 							<a class="dropdown-item" href="javascript:void(0)" onclick="toggleEdit('{{c.base36id}}')"><i class="fas fa-edit fa-fw"></i>Edit</a>
 
+							{% if c.deleted_utc > 0 %}
+							<a class="dropdown-item" href="javascript:void(0)" onclick="post('/undelete/comment/{{c.base36id}}', function(){window.location.reload(true);})"><i class="fas fa-trash-alt fa-fw"></i>Undelete</a>
+							{% else %}
 							<a class="dropdown-item" href="javascript:void(0)" data-toggle="modal" data-target="#deleteCommentModal" onclick="delete_commentModal('{{c.base36id}}')"><i class="fas fa-trash-alt fa-fw"></i>Delete</a>
-							
+							{% endif %}
+
 							{% endif %}
 							
 							{% if v and c.parent_submission and c.deleted_utc == 0 and (c.author_id==v.id or v.admin_level > 0) %}
