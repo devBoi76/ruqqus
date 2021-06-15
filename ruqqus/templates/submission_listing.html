@@ -159,12 +159,15 @@
 
 			<div class="post-actions mt-2 d-none d-md-block">
 				<ul class="list-inline text-right d-flex">
+						<li class="list-inline-item"><a href="javascript:void(0)" onclick="post('/save_post/{{p.base36id}}', function(){window.location.reload(true);})"><i class="fas fa-save"></i>Save</a></li>
 
 						<li class="list-inline-item"><a href="{{p.permalink}}"><i class="fas fa-comment-dots"></i>{{p.comment_count}}</a></li>
 
 						<li class="list-inline-item"><a href="/votes?link=https://rdrama.net{{p.permalink}}"><i class="fas fa-arrows-v"></i>Votes</a></li>
 
 						<li class="list-inline-item"><a href="javascript:void(0);" role="button" class="copy-link" data-clipboard-text="{{p.permalink | full_link}}"><i class="fas fa-copy"></i>Copy link</a></li>
+
+						<li class="list-inline-item"><a href="javascript:void(0)" onclick="post('/save_post/{{p.base36id}}', function(){window.location.reload(true);})"><i class="fas fa-save"></i>Save</a></li>
 
 						{% if v and v.admin_level==0 and not v.id==p.author_id %}
 						<li class="list-inline-item"><a href="javascript:void(0)" data-toggle="modal" data-dismiss="modal" data-target="#reportPostModal" onclick="report_postModal('{{p.base36id}}', '{{p.author.username}}','{{p.board.name}}')"><i class="fas fa-flag"></i>Flag</a></li>
