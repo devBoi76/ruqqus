@@ -1,0 +1,67 @@
+{% extends "userpage.html" %}
+
+{% block adminscripts %}
+<script src="/assets/js/comment_modding.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="row no-gutters">
+	<div class="col">
+		<div class="flex-row box-shadow-bottom d-flex justify-content-center justify-content-md-between align-items-center">
+			<ul class="nav settings-nav">
+				<li class="nav-item">
+					<a class="nav-link" href="/@{{v.username}}">Posts</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="/@{{v.username}}/comments">Comments</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link active" href="/@{{v.username}}/saved">Saved</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<div class="row no-gutters {% if listing %}mt-md-3{% elif not listing %}my-md-3{% endif %}">
+
+	<div class="col">
+
+		<div class="posts">
+			{% include "submission_listing.html" %}
+		</div>
+
+	</div>
+
+</div>
+{% endblock %}
+
+{% block pagenav %}
+{% if listing %}
+<nav aria-label="Page navigation">
+	<ul class="pagination pagination-sm mb-0">
+		{% if page>1 %}
+		<li class="page-item">
+			<small><a class="page-link" href="?page={{page-1}}" tabindex="-1">Prev</a></small>
+		</li>
+		{% else %}
+		<li class="page-item disabled"><span class="page-link">Prev</span></li>
+		{% endif %}
+		{% if next_exists %}
+		<li class="page-item">
+			<small><a class="page-link" href="?page={{page+1}}">Next</a></small>
+		</li>
+		{% else %}
+		<li class="page-item disabled"><span class="page-link">Next</span></li>
+		{% endif %}
+	</ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block GIFpicker %}
+{% if v %}
+{% include "gif_modal.html" %}
+{% endif %}
+{% endblock %}

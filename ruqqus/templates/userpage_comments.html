@@ -16,6 +16,11 @@
 				<li class="nav-item">
 					<a class="nav-link active" href="/@{{u.username}}/comments">Comments</a>
 				</li>		
+				{% if u.id == v.id %}
+				<li class="nav-item">
+					<a class="nav-link" href="/@{{u.username}}/saved">Saved</a>
+				</li>
+				{% endif %}
 			</ul>
 		</div>
 	</div>

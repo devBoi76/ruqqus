@@ -363,11 +363,11 @@ def user_profile_uid(uid):
 	return redirect(x.profile_url)
 
 
-@app.route("/saved", methods=["GET"])
+@app.route("/@<username>/saved", methods=["GET"])
 @app.route("/api/v1/saved", methods=["GET"])
 @auth_required
 @api("read")
-def saved_listing(v):
+def saved_listing(v, username):
 
 	print("saved listing")
 
@@ -383,15 +383,14 @@ def saved_listing(v):
 
 	listing = get_posts(ids, v=v, sort="new")
 
-	return {'html': lambda: render_template("home.html",
+	return {'html': lambda: render_template("userpage_saved.html",
 											v=v,
 											listing=listing,
 											page=page,
-											next_exists=next_exists
+											next_exists=next_exists,
 											),
 			'api': lambda: jsonify({"data": [x.json for x in listing]})
 			}
-
 
 def convert_file(html):
 
@@ -522,8 +521,8 @@ def info_packet(username, method="html"):
 
 
 
-#@app.route("/my_info", methods=["POST"])
-#@limiter.limit("2/day")
+@app.route("/my_info", methods=["POST"])
+@limiter.limit("2/day")
 @auth_required
 @validate_formkey
 def my_info_post(v):
