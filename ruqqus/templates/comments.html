@@ -234,7 +234,7 @@
 
 							{% endif %}
 
-							{% if v and c.parent_submission and c.author_id==v.id and c.deleted_utc == 0 %}
+							{% if v and c.parent_submission and c.author_id==v.id %}
 
 							<a class="dropdown-item" href="javascript:void(0)" onclick="toggleEdit('{{c.base36id}}')"><i class="fas fa-edit fa-fw"></i>Edit</a>
 
