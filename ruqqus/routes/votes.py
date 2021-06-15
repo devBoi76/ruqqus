@@ -66,6 +66,11 @@ def api_vote_post(post_id, x, v):
 
 		g.db.add(vote)
 
+	try:
+		g.db.flush()
+	except:
+		return jsonify({"error":"Vote already exists."}), 422
+		
 	post.upvotes = post.ups
 	post.downvotes = post.downs
 	g.db.add(post)
@@ -75,11 +80,6 @@ def api_vote_post(post_id, x, v):
 	post.score_best = post.rank_best
 	g.db.add(post)
 	g.db.commit()
-
-	try:
-		g.db.flush()
-	except:
-		return jsonify({"error":"Vote already exists."}), 422
 	
 	now = int(time.time())
 	if "100" in str(now): posts = g.db.query(Submission).options(lazyload('*')).filter_by(is_banned=False, deleted_utc=0).all()
