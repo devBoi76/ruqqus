@@ -369,8 +369,6 @@ def user_profile_uid(uid):
 @api("read")
 def saved_listing(v, username):
 
-	print("saved listing")
-
 	page=int(request.args.get("page",1))
 
 	ids=v.saved_idlist(page=page)
@@ -378,8 +376,6 @@ def saved_listing(v, username):
 	next_exists=len(ids)==26
 
 	ids=ids[0:25]
-
-	print(ids)
 
 	listing = get_posts(ids, v=v, sort="new")
 
