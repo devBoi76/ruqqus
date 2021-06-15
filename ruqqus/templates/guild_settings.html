@@ -20,7 +20,7 @@
 	<!-- Drama CSS -->
 
 	{% if v and v.can_use_darkmode and session.get("dark_mode_enabled") %}
-	<link id="css-link" rel="stylesheet" href="/assets/style/main_dark.css">
+	<link id="css-link" rel="stylesheet" href="/assets/style/main_light.css">
 	{% else %}
 	<link id="css-link" rel="stylesheet" href="/assets/style/main.css">
 	{% endif %}
@@ -157,6 +157,10 @@
 		<i class="fas fa-exclamation-circle mr-2"></i><span id="toast-post-error-text"></span>
 	</div>
 </div>
+
+{% block mobilenavbar %}
+{% include "mobile_navigation_bar.html" %}
+{% endblock %}
 
 {% block invitationModal %}
 {% endblock %}

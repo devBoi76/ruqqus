@@ -455,7 +455,7 @@ function switch_css() {
 	if (css.href.includes("/assets/style/main.css")) {
 		post("/settings/dark_mode/1",
 			callback=function(){
-				css.href="/assets/style/main_dark.css?v=2.35.94";
+				css.href="/assets/style/main_light.css?v=2.35.94";
 				dswitch.classList.remove("fa-toggle-off");
 				dswitch.classList.add("fa-toggle-on");
 				dswitchmobile.classList.remove("fa-toggle-off");
