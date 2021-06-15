@@ -165,7 +165,7 @@
 
 						<li class="list-inline-item"><a href="javascript:void(0);" role="button" class="copy-link" data-clipboard-text="{{p.permalink | full_link}}"><i class="fas fa-copy"></i>Copy link</a></li>
 
-						{% if v.saved_idlist() and p.id in v.saved_idlist() %}
+						{% if v and v.saved_idlist() and p.id in v.saved_idlist() %}
 						<li class="list-inline-item"><a href="javascript:void(0)" onclick="post('/unsave_post/{{p.base36id}}', function(){window.location.reload(true);})"><i class="fas fa-save"></i>Unsave</a></li>
 						{% else %}
 						<li class="list-inline-item"><a href="javascript:void(0)" onclick="post('/save_post/{{p.base36id}}', function(){window.location.reload(true);})"><i class="fas fa-save"></i>Save</a></li>
