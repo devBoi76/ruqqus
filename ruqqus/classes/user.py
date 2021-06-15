@@ -378,7 +378,7 @@ class User(Base, Stndrd, Age_times):
 		if v and not v.show_nsfl:
 			comments = comments.filter(Submission.is_nsfl == False)
 
-		if (not v) or v.admin_level < 3:
+		if (not v) or v.id != self.id or v.admin_level < 3:
 			comments = comments.filter(Comment.deleted_utc == 0)
 
 		if not (v and (v.admin_level >= 3 or v.id == self.id)):
