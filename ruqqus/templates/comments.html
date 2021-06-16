@@ -86,11 +86,9 @@
 
 <div id="comment-{{ c.base36id }}" class="comment rounded{% if standalone and level==1 %} mt-0{% endif %}{% if (not standalone) and c.collapse_for_user(v) %} collapsed{% endif %}">
 
-	<span class="mr-2 d-block d-md-none">{% if c.level > 1 %}‎{% endif %}</span>
+	<span class="mr-2 d-block d-md-none"><a href="{{ c.author.permalink }}"><img src="{{ c.author.profile_url }}" class="profile-pic-25"></a></span>
 
-	<span class="comment-collapse" onclick="collapse_comment('{{c.base36id}}')"></span>
-	
-	<span class="mr-2 d-block d-md-none">&nbsp;&nbsp;</span>
+	<span class="comment-collapse d-md-block d-none" onclick="collapse_comment('{{ c.base36id }}')"></span>
 
 	<div class="comment-body">
 
