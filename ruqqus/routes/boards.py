@@ -99,7 +99,7 @@ def mod_invite_username(bid, board, v):
 			perm_config=True
 			)
 
-		text = f"You have been invited to join +{board.name} as a guildmaster. You can [click here]({board.permalink}/mod/mods) and accept this invitation. Or, if you weren't expecting this, you can ignore it."
+		text = f"You have been invited to become an admin. You can [click here](/badmins) and accept this invitation. Or, if you weren't expecting this, you can ignore it."
 		send_notification(user, text)
 
 		g.db.add(x)

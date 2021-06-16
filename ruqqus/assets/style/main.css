@@ -13874,9 +13874,6 @@ pre .clo, pre .opn, pre .pun, code .clo, code .opn, code .pun {
 	.comment {
 		margin-top: 1.5rem; }
 
-	.comment .comment-collapse {
-		padding-right: 0; }
-
 	.comment.collapsed .user-info {
 		padding-top: 0.5rem; }
 
