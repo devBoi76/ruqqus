@@ -70,7 +70,7 @@ $('#new_email').on('input', function () {
 		},
 		{
 			type:'marsey',
-			emojis: ['marseyangel','marseyblowkiss','marseycry','marseydead','marseyexcited','marseygift','marseyinabox','marseylaugh','marseylove','marseymad','marseyparty','marseyrain','marseyreading','marseyready','marseysad','marseyscarf','marseyshook','marseysick','marseysleep','marseythumbsup','marseywave']
+			emojis: ['marseyjamming','marseyangel','marseyblowkiss','marseycry','marseydead','marseyexcited','marseygift','marseyinabox','marseylaugh','marseylove','marseymad','marseyparty','marseyrain','marseyreading','marseyready','marseysad','marseyscarf','marseyshook','marseysleep','marseythumbsup','marseywave']
 		},
 		{
 			type:'tay',
