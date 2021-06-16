@@ -12763,7 +12763,9 @@ ul.comment-section {
 	display: inline-block;
 	height: 100%;
 	cursor: pointer;
-	width: 10px; }
+	width: 10px;
+    margin-left: -10px;
+	}
 
 .comment .comment-collapse:hover::before {
 	border-left-color: #FF66AC; }
