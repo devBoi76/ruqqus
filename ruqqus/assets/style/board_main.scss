@@ -1,6 +1,6 @@
 // Colors
 
-$primary: #{boardcolor};
+$primary: #805AD5;
 $dark: #23183E;
 $secondary: #E2E8F0;
 $danger: #E53E3E;
@@ -12,7 +12,7 @@ $muted: #718096;
 $info: #168EEA;
 
 
-$purple: #{maincolor};
+$purple: #805AD5;
 $red:  #E53E3E;
 $gray: #718096;
 $green: #38A169;
@@ -143,7 +143,7 @@ $yiq-contrasted-threshold:  160 !default;
     }
   }
 
-@import "/home/ubuntu/ruqqus/ruqqus/assets/style/node_modules/bootstrap/scss/bootstrap.scss";
+@import "node_modules/bootstrap/scss/bootstrap.scss";
 
 html {
     font-size: 14px;

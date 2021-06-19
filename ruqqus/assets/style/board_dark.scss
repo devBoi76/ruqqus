@@ -1,6 +1,6 @@
 // Colors
 
-$setprimary: #{boardcolor};
+$setprimary: #805AD5;
 $primary: lighten($setprimary, 20%);
 $dark: #383838;
 $secondary: #383838;
@@ -12,7 +12,7 @@ $success: #38A169;
 $muted: #AAAAAA;
 $info: #168EEA;
 
-$purple: #{maincolor};
+$purple: #805AD5;
 $red:  #E53E3E;
 $gray: #383838;
 $green: #38A169;
@@ -150,7 +150,7 @@ $yiq-contrasted-threshold:  160 !default;
     }
   }
 
-@import "/home/ubuntu/ruqqus/ruqqus/assets/style/node_modules/bootstrap/scss/bootstrap.scss";
+@import "node_modules/bootstrap/scss/bootstrap.scss";
 
 html {
     font-size: 14px;
