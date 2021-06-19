@@ -95,7 +95,7 @@ In order to build your docs, you need to add the following to your hosts file:
 ```
 127.0.0.1    ruqqus.localhost
 ```
-
+Before deploying, make sure to compile .scss files in `ruqqus/assets/style/` with a package called "sass" (or ruby-sass)
 
 To deploy the stack with docker, simply use:
 
@@ -105,7 +105,7 @@ docker-compose up
 
 The database will automatically be seeded with an administrator account; user `ruqqie` and password `password`.
 
-*Note - you may need to add `- CLOUDFLARE_ZONE=false` to `environment` in `docker-compose.yml`*
+*Note - you may need to add `- CLOUDFLARE_ZONE=false` to `environment` in `docker-compose.yml` if its not already there*
 
 ### Mac
 
