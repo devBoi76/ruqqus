@@ -29,8 +29,9 @@ def main_css(file):
 			raw = file.read()
 
 	except FileNotFoundError:
-		#rint("unable to find file")
-		return make_response(send_file(f'~/ruqqus/ruqqus/assets/style/{file}.css'))
+		#print("unable to find file")
+		return make_response(send_file(f'../ruqqus/assets/style/{file}.css'))
+
 
 	# This doesn't use python's string formatting because
 	# of some odd behavior with css files
