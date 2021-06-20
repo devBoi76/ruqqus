@@ -1906,7 +1906,8 @@ CREATE TABLE public.follows (
     id integer NOT NULL,
     user_id integer,
     target_id integer,
-    created_utc integer
+    created_utc integer,
+    get_notifs Boolean default false
 );
 
 
