@@ -105,8 +105,6 @@ docker-compose up
 
 The database will automatically be seeded with an administrator account; user `ruqqie` and password `password`.
 
-*Note - you may need to add `- CLOUDFLARE_ZONE=false` to `environment` in `docker-compose.yml` if its not already there*
-
 ### Mac
 
 Install dependencies

@@ -30,7 +30,7 @@ def main_css(file):
 
 	except FileNotFoundError:
 		#print("unable to find file")
-		return make_response(send_file(f'../ruqqus/assets/style/{file}.css'))
+		return make_response(send_file(f'./assets/style/{file}.css'))
 
 
 	# This doesn't use python's string formatting because
