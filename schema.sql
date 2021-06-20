@@ -407,8 +407,8 @@ CREATE TABLE public.notifications (
     id integer NOT NULL,
     user_id integer,
     comment_id integer,
-    read boolean NOT NULL,
-    submission_id integer
+    submission_id integer,
+    read boolean NOT NULL
 );
 
 
