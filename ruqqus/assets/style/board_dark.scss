@@ -1,6 +1,6 @@
 // Colors
 
-$setprimary: #805AD5;
+$setprimary: #{boardcolor};
 $primary: lighten($setprimary, 20%);
 $dark: #383838;
 $secondary: #383838;
@@ -12,7 +12,7 @@ $success: #38A169;
 $muted: #AAAAAA;
 $info: #168EEA;
 
-$purple: #805AD5;
+$purple: #{maincolor};
 $red:  #E53E3E;
 $gray: #383838;
 $green: #38A169;
@@ -150,7 +150,7 @@ $yiq-contrasted-threshold:  160 !default;
     }
   }
 
-@import "node_modules/bootstrap/scss/bootstrap.scss";
+@import "{ruqquspath}/assets/style/node_modules/bootstrap/scss/bootstrap.scss";
 
 html {
     font-size: 14px;
