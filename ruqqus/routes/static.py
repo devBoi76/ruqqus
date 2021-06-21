@@ -5,6 +5,7 @@ import pprint
 import sass
 from flask import *
 
+from os import environ
 from ruqqus.helpers.wrappers import *
 import ruqqus.classes
 from ruqqus.classes import *
@@ -23,9 +24,9 @@ def main_css(file):
 		abort(404)
 
 	try:
-		name=f"ruqqus/ruqqus/assets/style/{file}.scss"
+		name=f"{app.config['RUQQUSPATH']}/assets/style/{file}.scss"
 		#print(name)
-		with open(os.path.join(os.path.expanduser('~'), name), "r") as file:
+		with open(name, "r") as file:
 			raw = file.read()
 
 	except FileNotFoundError:
@@ -37,7 +38,7 @@ def main_css(file):
 	# of some odd behavior with css files
 	scss = raw.replace("{boardcolor}", app.config["SITE_COLOR"])
 	scss = scss.replace("{maincolor}", app.config["SITE_COLOR"])
-
+	scss = scss.replace("{ruqquspath}", app.config["RUQQUSPATH"])
 
 	try:
 		resp = Response(sass.compile(string=scss), mimetype='text/css')
