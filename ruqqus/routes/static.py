@@ -5,7 +5,6 @@ import pprint
 import sass
 from flask import *
 
-from os import environ
 from ruqqus.helpers.wrappers import *
 import ruqqus.classes
 from ruqqus.classes import *
