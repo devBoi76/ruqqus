@@ -207,7 +207,7 @@ $('#new_email').on('input', function () {
       'evil',
       'evilclown',
       'evilgrin',
-      'facepalm',
+      'facepalm2',
       'fap',
       'flamethrower',
       'flipbird',
