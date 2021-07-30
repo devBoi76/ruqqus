@@ -7,7 +7,7 @@ services:
     volumes:
       - "./:/opt/ruqqus/service"
     environment:
-      - domain=localhost
+      - domain=ruqqus.localhost
       - REDIS_URL=redis://redis
       - DATABASE_URL=postgres://postgres@postgres:5432/postgres
       - DATABASE_CONNECTION_POOL_URL=postgres://postgres@postgres:5432/postgres
